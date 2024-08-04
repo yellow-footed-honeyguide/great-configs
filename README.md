@@ -8,6 +8,7 @@ A curated set of command-line utilities configs
 └── 🗂️ ~/.vimrc<br>
 │<br>
 └── 🗂️ ~/.gitconfig<br>
+│<br>
 📂 ~/.config<br>
 ├── 🪟 ~/.config/sway<br>
 │   └── ~/.config/sway/config<br>
