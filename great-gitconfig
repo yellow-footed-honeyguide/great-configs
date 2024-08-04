@@ -1,7 +1,29 @@
+#
+#    __                                
+#   (  )                               
+# \ _\/_,'    HONEYGUIDE GIT CONFIG    
+#--("))))))= -.._.-'-.._.-'-.._.-'-.._.
+#     \\   
+#
+# =============================================================================
+#             DEPENDENCIES FOR THIS .gitconfig
+# =============================================================================
+#
+# Core Dependencies:
+# - git (obviously)
+#
+# External Tools:
+# - diff-so-fancy    # Enhanced diff output
+#   Used in [pager] section for diff and show commands
+#
+# - batcat           # Syntax highlighting for 'show-file' alias
+#   Used in [alias] section for 'show-file' command
+# =============================================================================
+
 # User Information
 [user]
-    email = ""
-    name = ""
+    email = "s.venetsky@gmail.com"
+    name = "Sergey Veneckiy"
 
 # URL Rewrite for "your company" Git
 [url ""]
