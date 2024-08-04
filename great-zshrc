@@ -7,6 +7,52 @@
 #
 #
 
+#==============================================================================
+#
+#                         DEPENDENCIES FOR THIS .ZSHRC
+#
+#==============================================================================
+#
+# Core Dependencies:
+# - zsh (obviously)
+# - vim (used as default editor and for various functions)
+# - systemd (for system-related functions)
+# - dnf (package management functions)
+# - rpm (package querying)
+#
+# External Tools:
+# - fdfind (used in various search functions)
+# - diff-so-fancy (for enhanced diff output)
+# - viddy (for watching command output)
+# - ncal (calendar display)
+# - btop (system monitoring)
+# - lazydocker (Docker management)
+# - iotop (I/O monitoring)
+# - ranger (file manager)
+# - feh (image viewer)
+# - batcat (enhanced cat command)
+# - xclip (clipboard management)
+# - img2pdf (image to PDF conversion)
+# - ffmpeg (media file manipulation)
+# - nasm (for assembly-related functions)
+# - gcc (for C compilation)
+# - python3 and pip (for Python-related functions)
+# - mplayer (media player)
+#
+# Optional but Recommended:
+# - urxvt (terminal emulator used in some functions)
+# - foot (terminal emulator)
+# - firefox, palemoon, google-chrome-stable, chromium-browser (web browsers)
+# - qbittorrent (torrent client)
+# - xfce4-taskmanager (system monitor)
+# - virt-manager (virtualization management)
+# - viber (communication tool)
+#
+# Note: Some functions may require additional dependencies not listed here.
+# Please refer to the specific function comments for more details.
+#
+#==============================================================================
+
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # => Common Settings
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
