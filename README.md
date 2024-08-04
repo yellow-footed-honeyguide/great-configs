@@ -3,11 +3,11 @@ A curated set of command-line utilities configs
 
 ## 📁 Configs Location Map
 │<br>
-└── 🗂️ ~/.zshrc<br>
+└── ⚙️ ~./zshrc<br>
 │<br>
-└── 🗂️ ~/.vimrc<br>
+└── ⚙️ ~./vimrc<br>
 │<br>
-└── 🗂️ ~/.gitconfig<br>
+└── ⚙️ ~./gitconfig<br>
 │<br>
 📂 ~/.config<br>
 ├── 🪟 ~/.config/sway<br>
