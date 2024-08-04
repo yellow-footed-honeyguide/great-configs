@@ -6,13 +6,11 @@
 #     \\   
 #
 #
-
 #==============================================================================
 #
-#                         DEPENDENCIES FOR THIS .ZSHRC
+#             DEPENDENCIES FOR THIS .ZSHRC
 #
 #==============================================================================
-#
 # Core Dependencies:
 # - zsh (obviously)
 # - vim (used as default editor and for various functions)
@@ -39,18 +37,12 @@
 # - python3 and pip (for Python-related functions)
 # - mplayer (media player)
 #
-# Optional but Recommended:
-# - urxvt (terminal emulator used in some functions)
-# - foot (terminal emulator)
+# Optional:
 # - firefox, palemoon, google-chrome-stable, chromium-browser (web browsers)
 # - qbittorrent (torrent client)
 # - xfce4-taskmanager (system monitor)
+# - foot (terminal emulator)
 # - virt-manager (virtualization management)
-# - viber (communication tool)
-#
-# Note: Some functions may require additional dependencies not listed here.
-# Please refer to the specific function comments for more details.
-#
 #==============================================================================
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -166,6 +158,17 @@ stty -ixon       # disable Ctrl-S/Q flow control, freeing them for other uses
 # => Moving and Basic System Commands
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 #alias ls='echo -e "\e[3m`pwd`\e[0m" && ls -A -F --group-directories-first --sort=extension --color=always'
+
+# ls and facad
+function enhanced_ls() {
+    if [[ $# -eq 0 ]]; then
+        facad
+    else
+        /bin/ls -A -F --group-directories-first --sort=extension --color=always "$@"
+    fi
+}
+alias ls='enhanced_ls'
+
 alias l='\ls | nl'
 alias cal='ncal'
 alias j='\cd ../; facad;'
@@ -200,13 +203,16 @@ function sus {
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # => Basic Aliases
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+alias to='\cd /mnt/hddtb; ls'
+alias to1='\cd ~/Desktop/Labour && ls'
+alias to2='\cd ~/Desktop/Leisure && ls'
+
 alias vr='vim ~/Python_scripts/rp'
 alias vv='vim ~/.vimrc'
 alias vz='vim ~/.zshrc'
 alias vsw='vim /home/honeyguide/.config/sway/config'
 alias vf='vim /home/honeyguide/.config/foot/foot.ini'
 alias ii='swaymsg reload'
-#alias xx='xrdb /home/honeyguide/.Xresources'
 alias zz='source ~/.zshrc'
 alias cp='cp -r'
 
@@ -220,13 +226,9 @@ alias slimjet='flashpeak-slimjet &; disown;exit'
 alias lsd='ls -d */'
 alias lsff='echo "\nFiles:"; \ls -p | grep -v /|column; echo "\nDirectories-> "; tree -d -L 2|column; echo "\n";'
 
-alias to='\cd /mnt/hddtb; ls'
-alias to1='\cd ~/Desktop/Labour && ls'
-alias to2='\cd ~/Desktop/Leisure && ls'
-
 alias size='du -sh'
 alias gsm='xfce4-taskmanager &; disown;exit'
-alias tm='xfce4-taskmanager &; disown;exit'
+alias io='sudo iotop --processes  --only'
 
 function fp {
   local file_path="$1"
@@ -250,23 +252,10 @@ alias rec='arecord -vv -fdat'
 alias ff='ffmpeg -hide_banner -i'
 alias tl='tldr'
 alias i='cd `\cat ~/Desktop/.for_cd`; ls'
-#alias cw='watch -n.99 "echo 'Temp'; sensors 2> /dev/null | grep Core; echo ''; echo 'Freq'; cat /proc/cpuinfo | grep \"^[c]pu MHz\""'
 alias cw='viddy -n 1 -d "echo 'Temp'; sensors 2> /dev/null | grep Core; echo ''; echo 'Freq'; cat /proc/cpuinfo | grep \"^[c]pu MHz\""'
 alias vm='virt-manager &; disown;exit'
 alias r='ranger ./'
 alias homeserv="curl ipinfo.io/ip; echo ''; hostname -I | cut -d' ' -f1; echo ''; python3 -m http.server 8095" # homeserv
-
-alias viber='/opt/viber/Viber &; disown;exit'
-
-alias feh_bg='feh --bg-scale /home/honeyguide/Pictures/Back/back0.png'
-
-#alias cat='batcat --theme="Coldark-Cold"'
-alias bt='urxvt -e btop &; disown; exit'
-alias iotop='urxvt -bg "[80]#000000" -fg white -tr -sh 50 -e sudo iotop --only --processes &; disown; exit'
-
-alias qp='pwd | xclip -selection primary'
-
-alias lazydocker='urxvt -bg "[80]#000000" -fg white -tr -sh 20 -e lazydocker &; disown; exit'
 
 
 
