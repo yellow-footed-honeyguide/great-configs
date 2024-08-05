@@ -243,7 +243,10 @@ function fp {
 }
 
 alias ht='htop --sort-key=PERCENT_CPU'
-alias rm='sudo rm -R'
+
+# be careful with next command
+#alias rm='sudo rm -R'
+
 alias nc='ncal -M -3'
 alias y='yes'
 
@@ -272,11 +275,7 @@ function rpi {
 }
 
 # Remove package
-#function rpr {
-#   sudo dnf remove -y $1 && sudo dnf autoremove -y
-#}
-
-# rpr function
+# rpr function | Be careful with this function
 # Remove package, unused dependencies and associated files
 # Dependencies: fdfind
 function rpr() {
