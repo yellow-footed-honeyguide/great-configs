@@ -32,7 +32,7 @@ imap <right> <nop>
 :noremap o :up<enter>
 
 "save and quit
-:noremap O :wq<enter>
+":noremap O :wq<enter>
 
 "save and suspend Vim
 ":noremap u :w<enter><C-z>
@@ -291,76 +291,88 @@ highlight PmenuSel ctermbg=yellow guibg=white
 "disable highlighting of matching parentheses
 "let g:loaded_matchparen=1
 
-highlight MatchParen ctermbg=none ctermfg=yellow
-
+highlight MatchParen ctermbg=none ctermfg=blue
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Functions
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"Inserts an HTML <br> tag at the end of the current line
-"function! InsertBR()
-"  exec "normal! A<br>\<Esc>"
-"endfunction
-"noremap <silent> p :call InsertBR()<CR>
 
-"Toggles character '!' to comment/uncomment a line
+" Toggle comment with '!' at the beginning of the line
 function! CommentExclam()
-  if matchstr(getline(line(".")),'^\s*\!.*$') == ''
-    :execute "s:^:!:"
-  else
-    :execute "s:^\s*!::"
-  endif
+    let l:line = getline('.')
+    if l:line =~ '^\s*!'
+        execute 's/^\s*!//'
+    else
+        execute 's/^/!/'
+    endif
 endfunction
 
-"Toggles character '#' to comment/uncomment a line
+" Toggle comment with '#' at the beginning of the line
 function! CommentHash()
-  if matchstr(getline(line(".")),'^\s*\#.*$') == ''
-    :execute "s:^:#:"
-  else
-    :execute "s:^\s*#::"
-  endif
+    let l:line = getline('.')
+    if l:line =~ '^\s*#'
+        execute 's/^\s*#//'
+    else
+        execute 's/^/#/'
+    endif
 endfunction
-:noremap I :call CommentHash()<enter>:echo  <enter>
 
-"Toggles character '"' to comment/uncomment a line
+" Toggle comment with '"' at the beginning of the line
 function! CommentDoubleQuote()
-        if matchstr(getline(line(".")),'^\s*\".*$') == ''
-                :execute "s:^:\":"
-        else
-                :execute "s:^\s*\"::"
-        endif
+    let l:line = getline('.')
+    if l:line =~ '^\s*"'
+        execute 's/^\s*"//'
+    else
+        execute 's/^/"//'
+    endif
 endfunction
 
-"Toggles character '//' to comment/uncomment a line
+" Toggle comment with '//' at the beginning of the line, preserving indentation
 function! CommentDoubleSlash()
-        if matchstr(getline(line(".")),'^\s*\/\/.*$') == ''
-                :execute "s:^://:"
-        else
-                :execute "s:^\s*//::"
-        endif
+    let l:line = getline('.')
+    if l:line =~ '^\s*//'
+        execute 's:^\(\s*\)//:\1:'
+    else
+        execute 's:^\(\s*\):\1// :'
+    endif
 endfunction
 
-autocmd BufWinEnter *php* :noremap I :call CommentDoubleSlash()<enter>:echo  <enter>
-autocmd BufWinEnter *.c* :noremap I :call CommentDoubleSlash()<enter>:echo  <enter>
-autocmd BufWinEnter *.cpp* :noremap I :call CommentDoubleSlash()<enter>:echo  <enter>
-autocmd BufWinEnter *.vimrc* :noremap I :call CommentDoubleQuote()<enter>:echo  <enter>
-autocmd BufWinEnter *.Xresources* :noremap I :call CommentExclam()<enter>:echo  <enter>
-autocmd BufWinEnter *.vimrc* setlocal syntax=OFF
-autocmd BufWinEnter *.zshrc* setlocal syntax=OFF
-
+" Copy to both clipboard and primary buffer
 function! CopyToBothBuffers()
-    let content = getreg('"')
-    call system('wl-copy', content)
-    call system('wl-copy -p', content)
+    let l:content = @"
+    call system('wl-copy', l:content)
+    call system('wl-copy -p', l:content)
     echo "Copied to clipboard and primary"
 endfunction
+
+" Format code using clang-format and move to next paragraph
+function! FormatAndNewLine()
+    let l:winview = winsaveview()
+    silent! execute '%!clang-format'
+    call winrestview(l:winview)
+    normal! }
+endfunction
+
+" Key mappings
+nnoremap I :call CommentHash()<CR>
 nnoremap : yy:call CopyToBothBuffers()<CR>
-
-
-"NEW
-" Move cursor right
-:noremap <C-w> l
-
-" Jump to matching bracket
+nnoremap <C-w> l
 nnoremap / %
+nnoremap O :call FormatAndNewLine()<CR>
+
+" File-specific settings
+augroup FileTypeSpecific
+    autocmd!
+    autocmd BufWinEnter *.php,*.c,*.cpp :noremap I :call CommentDoubleSlash()<CR>
+    autocmd BufWinEnter *.vimrc :noremap I :call CommentDoubleQuote()<CR>
+    autocmd BufWinEnter *.Xresources :noremap I :call CommentExclam()<CR>
+    autocmd BufWinEnter *.vimrc,*.zshrc setlocal syntax=OFF
+augroup END
+
+" Plugins
+call plug#begin()
+Plug 'rhysd/vim-clang-format'
+call plug#end()
+
+
