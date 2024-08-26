@@ -68,7 +68,7 @@ imap <right> <nop>
 :noremap n o
 
 "open a new line above the current one
-:noremap u O
+:nnoremap u O
 
 "move to the end of the line and enter ins mode
 :noremap n A
@@ -111,10 +111,16 @@ nnoremap s ;
 :noremap x ggVGc
 
 "undo
-:noremap , u
+":noremap , u
+:nnoremap , u
+":nnoremap , :let winview=winsaveview()<CR>u:call winrestview(winview)<CR>
 
 "redo
-:noremap . <C-R>
+":noremap . <C-R>
+:nnoremap . <C-R>
+":nnoremap . :let winview=winsaveview()<CR>.:call winrestview(winview)<CR>
+":nnoremap . :let winview=winsaveview()<CR><C-R>:call winrestview(winview)<CR>
+
 
 "yank the current line
 :noremap : y
@@ -150,7 +156,7 @@ nnoremap s ;
 nnoremap V my
 
 " jump to a mark, yank the current line, and center the view
-nnoremap K `yzz
+"nnoremap K `yzz
 
 "enter visual mode
 :noremap a v
@@ -225,7 +231,7 @@ nnoremap N `V
 nnoremap D $ 
 
 "jump to start of line
-nnoremap K 0 
+"nnoremap K 0 
 
 
 
@@ -351,7 +357,6 @@ function! FormatAndNewLine()
     let l:winview = winsaveview()
     silent! execute '%!clang-format'
     call winrestview(l:winview)
-    normal! }
 endfunction
 
 " Key mappings
