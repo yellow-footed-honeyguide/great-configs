@@ -170,6 +170,7 @@ function enhanced_ls() {
 alias ls='enhanced_ls'
 
 alias l='\ls | nl'
+alias m='mkdir -p'
 alias cal='ncal'
 alias j='\cd ../; facad;'
 #alias jj='\cd ../../; ls;'
@@ -205,7 +206,7 @@ function sus {
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 alias to='\cd /mnt/hddtb; ls'
 alias to1='\cd ~/Desktop/Labour && ls'
-alias to2='\cd ~/Desktop/Leisure && ls'
+alias to2='\cd ~/Desktop/Talks && ls'
 
 alias vr='vim ~/Python_scripts/rp'
 alias vv='vim ~/.vimrc'
@@ -231,21 +232,24 @@ alias gsm='xfce4-taskmanager &; disown;exit'
 alias io='sudo iotop --processes  --only'
 
 function fp {
-  local file_path="$1"
-  if [[ -e "$file_path" ]]; then
-    local full_path=$(readlink -f "$file_path")
-    echo " " 
-    echo "$full_path"
-    echo " " 
-  else
-    echo "File does not exist"
-  fi  
+    local file_path="$1" 
+    if [[ -e "$file_path" ]]
+    then
+        local full_path=$(readlink -f "$file_path") 
+        echo " "
+        echo "$full_path"
+        echo " "
+        echo "$full_path" | wl-copy --primary
+        echo "Path copied to Primary Buffer"
+    else
+        echo "File are not exist"
+    fi
 }
 
 alias ht='htop --sort-key=PERCENT_CPU'
 
-# be careful with next command
-#alias rm='sudo rm -R'
+# be careful with the next command!
+alias rm='sudo rm -R'
 
 alias nc='ncal -M -3'
 alias y='yes'
@@ -256,6 +260,7 @@ alias ff='ffmpeg -hide_banner -i'
 alias tl='tldr'
 alias i='cd `\cat ~/Desktop/.for_cd`; ls'
 alias cw='viddy -n 1 -d "echo 'Temp'; sensors 2> /dev/null | grep Core; echo ''; echo 'Freq'; cat /proc/cpuinfo | grep \"^[c]pu MHz\""'
+alias cw2='watch -n 1 -d "echo 'Temp'; sensors 2> /dev/null | grep Core; echo ''; echo 'Freq'; cat /proc/cpuinfo | grep \"^[c]pu MHz\""'
 alias vm='virt-manager &; disown;exit'
 alias r='ranger ./'
 alias homeserv="curl ipinfo.io/ip; echo ''; hostname -I | cut -d' ' -f1; echo ''; python3 -m http.server 8095" # homeserv
@@ -275,7 +280,7 @@ function rpi {
 }
 
 # Remove package
-# rpr function | Be careful with this function
+# rpr function | Be careful with this function!
 # Remove package, unused dependencies and associated files
 # Dependencies: fdfind
 function rpr() {
@@ -359,11 +364,12 @@ function rpl {
 }
 
 # Search packages with specific substring
-function rps {
-    pkg=$1
+rps() {
+    pkg=$1 
     dnf search "$pkg" | sed -E 's/^(.*)\.(x86_64|noarch|i686) : /\1 # /' | awk '{printf "%-20s # %s\n", $1, substr($0, index($0, "#") + 2)}'
     echo -e "\033[1mFound packages in Rep: $(dnf search "$pkg" | wc -l)\033[0m"
 }
+
 
 # Search packages with specific substring locally
 function rpsl {
@@ -383,12 +389,20 @@ rpflat () {
 
 # Package statistics
 function rpstat {
-    echo "Packages installed: $(dnf list installed | wc -l) (Total avail: $(dnf list | wc -l))"
-    echo "Libs installed: $(dnf list installed | grep 'lib' | wc -l)"
-    echo "Python modules: $(pip3 list | wc -l)"
-    echo "Services running: $(systemctl list-units --type=service --state=running | grep -c .service)"
-    echo "Installed by user: $(dnf history userinstalled | wc -l)"
-    echo "Snap: $(( $(snap list | wc -l) - 1 ))"
+    local installed_count=$(dnf list installed | wc -l)
+    local total_count=$(dnf list | wc -l)
+    local lib_count=$(dnf list installed | grep -c 'lib')
+    local python_modules=$(pip3 list --format=freeze | wc -l)
+    local running_services=$(systemctl list-units --type=service --state=running --no-legend | wc -l)
+    local user_installed=$(dnf history userinstalled | wc -l)
+    local flatpak_count=$(flatpak list --app | wc -l)
+
+    printf "%-20s %d (Total in repos: %d)\n" "Packages installed:" $installed_count $total_count
+    printf "%-20s %d\n" "Installed by user:" $user_installed
+    printf "%-20s %d\n" "Services running:" $running_services
+    printf "%-20s %d\n" "Libs installed:" $lib_count
+    printf "%-20s %d\n" "Python modules:" $python_modules
+    printf "%-20s %d\n" "Flatpak:" $flatpak_count
 }
 
 # Find the package that provides a given command or file
@@ -447,54 +461,14 @@ function rpdrall {
 }
 
 # Full info about package
-function rpinfo() {
-    if [[ -z "$1" ]]; then
-        echo "Please use rpinfo with a package name as an argument"
-        return 1
-    fi
-    local package="$1"
-    local installed_status
-    local description
-
-    if dnf list installed "$package" &>/dev/null; then
-        installed_status="installed: YES"
+function rpinf() {
+    if rpm -qi $1 &>/dev/null; then
+        rpm -qi $1
     else
-        installed_status="installed: NO"
+        echo "Package $1 is not installed locally. Searching for package information...\n"
+        dnf info $1
     fi
-
-    description=$(dnf info "$package" 2>/dev/null | sed -n 's/Summary *: //p')
-
-    echo "\\033[1m$package ($installed_status) - $description\\033[0m"
-    echo ''
-
-    dnf info $package | awk -F': ' '
-    BEGIN {
-        BOLD="\033[1m";
-        NORMAL="\033[0m";
-    }
-    {
-        if ($1 ~ /Name|Version|Release|Architecture|Size|Source|Repository|Summary|URL|License|Description/) {
-            gsub(/^ */, "", $1);
-            if ($1 == "Description") {
-                print BOLD $1 NORMAL ":";
-                getline;
-                while ($0 !~ /^$/) {
-                    print "        " $0;
-                    if (getline <= 0) {
-                        break;
-                    }
-                }
-            } else {
-                print BOLD $1 NORMAL ": " $2;
-            }
-        }
-    }'
-    echo ''
-
-    echo "Files provided by the package:"
-    dnf repoquery -l "$package" 2>/dev/null
 }
-
 
 # Get info about command or package
 function wh() {
@@ -595,10 +569,6 @@ _rpdrall() {
 } 
 compdef _rpdrall rpdrall
 
-_rps() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
-compdef _rps rps
 
 _rpl() { 
    compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
@@ -610,9 +580,12 @@ _rpi() {
 } 
 compdef _rpi rpi
 
-_rpr() { 
-   compadd $(dnf list installed | awk '{print $1}' | grep -v "@" | tail -n +2 | sed 's/\..*$//')
-} 
+_rpr() {
+    local -a completions
+
+    completions+=(${(k)commands})
+    compadd -a completions
+}
 compdef _rpr rpr
 
 _cht() { 
@@ -641,6 +614,13 @@ alias un='unpak'
 function mem {
    viddy "echo  'Private  +  Shared    =  RAM used    Program'; sudo ps_mem | tac | head -n -1"
 }
+
+#enhanced_tree() {
+#  \tree --dirsfirst -C -L "${1:-1}" "${@:2}"
+#}
+#alias tree='enhanced_tree'
+alias tree='\tree --dirsfirst -C'
+
 
 function fbig {
     find ./ -xdev -type f -size +$@G | sed -e 's/"/"\\""/g' -e 's/.*/"&"/' |
@@ -723,7 +703,7 @@ function na {
 }
 
 function di() {
-    diff -Nur "$1" "$2" | diff-so-fancy
+    diff -Nurs "$1" "$2" | diff-so-fancy
 }
 
 # Set window title for terminal emulators
@@ -731,18 +711,18 @@ function di() {
 set_win_title() {
     case "$TERM" in
         foot*|xterm*|rxvt*|alacritty*)
-            if [[ "$1" =~ ^vim.* ]]; then
-                # Special handling for vim: show edited file name
-                print -Pn "\e]0;vim: ${1#vim }\a"
-            elif [[ -n "$1" ]]; then
-                # For other commands: show the command name
-                print -Pn "\e]0;${1%% *}\a"
-            else
+            if [[ "$1" =~ ^vim.* ]]; then 
+                # Special handling for vim: show edited file name 
+                print -Pn "\e]0;vim: ${1#vim }\a" 
+            elif [[ -n "$1" ]]; then 
+                # For other commands: show the full command with arguments
+                print -Pn "\e]0;$1\a"
+            else 
                 # Default: show current directory
                 print -Pn "\e]0;%~\a"
-            fi
-            ;;
-    esac
+            fi   
+            ;;   
+    esac 
 }
 # Set window title to current directory before each prompt
 set_win_title_precmd() { print -Pn "\e]0;%~\a" }
@@ -810,6 +790,8 @@ alias spu='sudo python3 -m pip install --upgrade'
 alias spr='sudo python3 -m pip uninstall'
 alias spsh='sudo python3 -m pip show'
 alias spf='sudo python3 -m pip freeze | nl'
+alias sps='sudo python3 -m pip search'
+
 
 function spi { 
   sudo python3 -m pip install $1 --break-system-packages 
@@ -848,10 +830,10 @@ bindkey -v
 function zle-line-init zle-keymap-select {
    case ${KEYMAP} in
        vicmd)
-           PROMPT='%B%F{green}norm❯ %f%b'
+           PROMPT='%B%F{blue}n❯ %f%b'
            ;;
        main|viins)
-           PROMPT='%B%F{green}edit❯ %f%b'
+           PROMPT='%B%F{green}❯ %f%b'
            ;;
    esac
    zle reset-prompt
@@ -862,7 +844,7 @@ zle -N zle-keymap-select
 # Always start in insert mode and set the prompt accordingly
 zle-line-init() {
    zle -K viins
-   PROMPT='%B%F{green}edit❯ %f%b'
+   PROMPT='%B%F{green}❯ %f%b'
    zle reset-prompt
 }
 zle -N zle-line-init
