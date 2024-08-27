@@ -37,9 +37,8 @@
 # - python3 and pip (for Python-related functions)
 # - mplayer (media player)
 #
-# Optional:
+# Optional. This config contains aliases for the following utilities:
 # - firefox, palemoon, google-chrome-stable, chromium-browser (web browsers)
-# - qbittorrent (torrent client)
 # - xfce4-taskmanager (system monitor)
 # - foot (terminal emulator)
 # - virt-manager (virtualization management)
@@ -221,7 +220,6 @@ alias x='firefox &; disown;exit'
 alias pale='palemoon &; disown;exit'
 alias g='google-chrome-stable &; disown;exit'
 alias g2='chromium-browser &; disown;exit'
-alias qb='qbittorrent &; disown;exit'
 alias slimjet='flashpeak-slimjet &; disown;exit'
 
 alias lsd='ls -d */'
@@ -281,67 +279,8 @@ function rpi {
 
 # Remove package
 # rpr function | Be careful with this function!
-# Remove package, unused dependencies and associated files
-# Dependencies: fdfind
 function rpr() {
-    local pack="$1"
-    local config_dirs=("/etc" "/usr/share" "$HOME")
-    local mime_db="/usr/share/mime"
-
-    # Check if the terminal supports color
-    if [ -t 1 ] && [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
-        local bold="\033[1m"
-        local normal="\033[0m"
-    else
-        local bold=""
-        local normal=""
-    fi
-
-    echo -e "${bold}The following package and its dependencies will be removed:${normal}"
-    sudo dnf remove --assumeno "$pack"
-    echo -n "${bold}Proceed with removal? (y/n) ${normal}"
-    read -r response
-    if [[ ! $response =~ ^[Yy]$ ]]; then
-        echo "${bold}Removal cancelled.${normal}"
-        return 1
-    fi
-    sudo dnf remove -y "$pack"
-    echo
-    echo -e "${bold}Searching packages that no longer needed and can be removed:${normal}"
-    sudo dnf autoremove --assumeno
-    echo -n "${bold}Proceed with autoremoval of unused dependencies? (y/n) ${normal}"
-    read -r response
-    if [[ $response =~ ^[Yy]$ ]]; then
-        sudo dnf autoremove -y
-    else
-        echo "${bold}Autoremoval skipped.${normal}"
-    fi
-    # Remove configuration files
-    for dir in "${config_dirs[@]}"; do
-        sudo fd --hidden --no-ignore "$pack" "$dir" -x sudo rm -rf {}
-    done
-    echo "${bold}Configs associated with $pack removed.${normal}"
-
-    # Find remaining files
-    local files_to_remove=($(sudo fd --hidden --no-ignore "$pack" / 2>/dev/null))
-    if (( ${#files_to_remove[@]} > 0 )); then
-        echo "${bold}Found the following files:${normal}"
-        for file in "${files_to_remove[@]}"; do
-            echo "$file"
-            echo -n "${bold}Delete this file? (y/n) ${normal}"
-            read -r response
-            if [[ $response =~ ^[Yy]$ ]]; then
-                sudo rm -rf "$file"
-            else
-                echo "${bold}Skipped deletion of $file${normal}"
-            fi
-        done
-    fi
-
-    # Update icon cache and databases
-    sudo update-desktop-database
-    sudo update-mime-database "$mime_db"
-    echo "${bold}Cleanup completed.${normal}"
+    sudo dnf remove $1
 }
 
 # List packages that are ready to upgrade
@@ -575,10 +514,10 @@ _rpl() {
 } 
 compdef _rpl rpl
 
-_rpi() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
-compdef _rpi rpi
+#_rpi() { 
+#   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
+#} 
+#compdef _rpi rpi
 
 _rpr() {
     local -a completions
@@ -688,7 +627,7 @@ di () {
 }
 
 function cht {
-    /opt/cht.sh $1 | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' > ~/.cheat/temp_output_cht_sh && vim ~/.cheat/temp_output_cht_sh && clear && pwd
+    /usr/local/bin/cht.sh $1 | sed 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' > ~/.cheat/temp_output_cht_sh && vim ~/.cheat/temp_output_cht_sh && clear && pwd
 }
 
 function gc {
@@ -830,7 +769,7 @@ bindkey -v
 function zle-line-init zle-keymap-select {
    case ${KEYMAP} in
        vicmd)
-           PROMPT='%B%F{blue}n❯ %f%b'
+           PROMPT='%B%F{black}edit: %f%b'
            ;;
        main|viins)
            PROMPT='%B%F{green}❯ %f%b'
@@ -865,14 +804,14 @@ bindkey -M vicmd '.' redo
 bindkey -M vicmd 'h' up-line-or-history
 bindkey -M vicmd 'g' down-line-or-history
 bindkey -M vicmd 'c' kill-whole-line
-bindkey -M vicmd 'K' beginning-of-line
-bindkey -M vicmd 'D' end-of-line
+bindkey -M vicmd 'D' beginning-of-line
+bindkey -M vicmd 'K' end-of-line
 bindkey -M vicmd 'v' kill-word
 bindkey -M vicmd 'a' backward-char
 bindkey -M vicmd 'w' forward-char
 bindkey -M vicmd 'f' delete-char
 bindkey -M vicmd 'E' kill-line
-bindkey -M vicmd 't' clear-screen
+bindkey -M vicmd 'o' clear-screen
 
 # Function to delete word (regardless of cursor position)
 kill-word() {
