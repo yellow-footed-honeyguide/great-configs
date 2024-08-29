@@ -31,12 +31,6 @@ imap <right> <nop>
 "move one line up and enter command mode
 :noremap o :up<enter>
 
-"save and quit
-":noremap O :wq<enter>
-
-"save and suspend Vim
-":noremap u :w<enter><C-z>
-
 "move to the end of the file
 :noremap <Space> G
 
@@ -51,12 +45,6 @@ imap <right> <nop>
 
 "move up 10 lines
 :noremap y 10k
-
-"move down 1000 lines
-":noremap T 1000j
-
-"move up 1000 lines
-":noremap Y 1000k
 
 "move to the beginning of the line
 :noremap K ^
@@ -88,7 +76,6 @@ nnoremap k F
 " repeat the last 'f', 't', 'F' or 'T' command
 nnoremap s ;
 
-
 "remove current character, enter ins mode
 :noremap f s
 
@@ -111,25 +98,16 @@ nnoremap s ;
 :noremap x ggVGc
 
 "undo
-":noremap , u
 :nnoremap , u
-":nnoremap , :let winview=winsaveview()<CR>u:call winrestview(winview)<CR>
 
 "redo
-":noremap . <C-R>
 :nnoremap . <C-R>
-":nnoremap . :let winview=winsaveview()<CR>.:call winrestview(winview)<CR>
-":nnoremap . :let winview=winsaveview()<CR><C-R>:call winrestview(winview)<CR>
-
 
 "yank the current line
 :noremap : y
 
 "duplicate the current line
 :noremap i yyp
-
-"save all changes to all buffers
-":noremap W :%w!
 
 "move to the beginning of the file
 :noremap q gg
@@ -139,9 +117,6 @@ nnoremap s ;
 
 "move to the end of the file and center the view on the cursor
 :noremap z Gzz
-
-"find the next occurrence and repeat the last change
-":noremap ; n.
 
 "turn off search highlighting
 :noremap ] :nohlsearch<enter>
@@ -154,9 +129,6 @@ nnoremap s ;
 
 " set a mark and yank the current line
 nnoremap V my
-
-" jump to a mark, yank the current line, and center the view
-"nnoremap K `yzz
 
 "enter visual mode
 :noremap a v
@@ -194,20 +166,8 @@ nnoremap ; /
 "reopen the current file with a specific encoding
 :noremap <F4> :e ++enc=cp1251<enter>
 
-"insert a space at the beginning of the current line
-":noremap U :s/^/   / <enter>:nohlsearch<enter>:echo <enter>
-
-"remove a space from the beginning of the current line
-":noremap L :s/^ // <enter>:nohlsearch<enter>:echo <enter>
-
-"insert """ comment at the beginning of the current line
-":noremap : :s/^/""" / <enter>:nohlsearch<enter>:echo <enter>
-
 "toggle line numbers
 :noremap w :set invnumber<enter>:echo <enter>
-
-"insert a new line above the current line
-":noremap i :call append(line('.')-1, '')<enter>:-<enter>:echo <enter>
 
 "insert a new line below the current line
 :noremap m :call append(line('.'), '')<enter>:+<enter>:echo <enter>
@@ -229,9 +189,6 @@ nnoremap N `V
 
 "jump to end of line
 nnoremap D $ 
-
-"jump to start of line
-"nnoremap K 0 
 
 
 
@@ -265,9 +222,6 @@ set shortmess=A
 "disable writing backup files
 set nowritebackup
 
-"use system clipboard for yank and put operations
-"set clipboard=unnamed,unnamedplus
-
 "timeout for key codes and mappings
 set timeout timeoutlen=10 ttimeoutlen=10
 
@@ -285,19 +239,20 @@ syntax on
 highlight LineNr ctermfg=3
 
 "font and background color for search occurrences
-"highlight Search ctermfg=black ctermbg=gray
 highlight Search ctermfg=black ctermbg=green
 
 "background color for popup menu
 highlight Pmenu ctermbg=blue guibg=gray
 
 "background color for selected item in popup menu
-highlight PmenuSel ctermbg=yellow guibg=white
-
-"disable highlighting of matching parentheses
-"let g:loaded_matchparen=1
+highlight PmenuSel ctermbg=208 guibg=#FF8C00
 
 highlight MatchParen ctermbg=none ctermfg=blue
+
+
+" Force syntax highlighting for vim and zsh config files
+autocmd BufEnter .vimrc,.vim,.zshrc,.zsh syntax on
+
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -375,9 +330,21 @@ augroup FileTypeSpecific
     autocmd BufWinEnter *.vimrc,*.zshrc setlocal syntax=OFF
 augroup END
 
-" Plugins
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Plugins
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Auto-formatter for C-family languages
 call plug#begin()
 Plug 'rhysd/vim-clang-format'
 call plug#end()
 
+" Set tag files location: current dir, then up to $HOME
+set tags=./tags,tags;$HOME 
+  
+" Jump to tag definition
+nnoremap G <C-]>
 
+" Jump back from definition
+nnoremap H <C-t>
