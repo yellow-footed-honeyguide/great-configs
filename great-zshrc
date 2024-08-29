@@ -79,8 +79,8 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 # => CUSTOM HISTORY
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 HISTFILE=~/.histfile
-HISTSIZE=3000
-SAVEHIST=3000
+HISTSIZE=10000
+SAVEHIST=10000
 
 setopt HIST_IGNORE_ALL_DUPS 
 setopt INC_APPEND_HISTORY  
@@ -91,7 +91,7 @@ setopt HIST_IGNORE_SPACE
 setopt SHARE_HISTORY      
 HISTORY_IGNORE='(vh|s|e|vz|n|d)' 
 
-# custom history file
+# Custom history file
 function vh {
     temp_file=$(mktemp /tmp/histfile.XXXXXX)
     temp_view_file=$(mktemp /tmp/histfile_view.XXXXXX)
@@ -148,16 +148,13 @@ alias -s pptx='libreoffice'
 
 export EDITOR=vim
 export VISUAL=vim
-export PATH=$PATH:/home/honeyguide/Python_scripts/
-stty -ixon       # disable Ctrl-S/Q flow control, freeing them for other uses
+stty -ixon # disable Ctrl-S/Q flow control, freeing them for other uses
 
 
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # => Moving and Basic System Commands
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-#alias ls='echo -e "\e[3m`pwd`\e[0m" && ls -A -F --group-directories-first --sort=extension --color=always'
-
 # ls and facad
 function enhanced_ls() {
     if [[ $# -eq 0 ]]; then
@@ -172,7 +169,6 @@ alias l='\ls | nl'
 alias m='mkdir -p'
 alias cal='ncal'
 alias j='\cd ../; facad;'
-#alias jj='\cd ../../; ls;'
 alias jj='\cd -; ls;'
 
 function f {
@@ -207,11 +203,11 @@ alias to='\cd /mnt/hddtb; ls'
 alias to1='\cd ~/Desktop/Labour && ls'
 alias to2='\cd ~/Desktop/Talks && ls'
 
-alias vr='vim ~/Python_scripts/rp'
 alias vv='vim ~/.vimrc'
 alias vz='vim ~/.zshrc'
-alias vsw='vim /home/honeyguide/.config/sway/config'
-alias vf='vim /home/honeyguide/.config/foot/foot.ini'
+alias vsw='vim ~/.config/sway/config'
+alias vf='vim ~/.config/foot/foot.ini'
+alias vg='vim ~/.gitconfig'
 alias ii='swaymsg reload'
 alias zz='source ~/.zshrc'
 alias cp='cp -r'
@@ -245,13 +241,9 @@ function fp {
 }
 
 alias ht='htop --sort-key=PERCENT_CPU'
-
-# be careful with the next command!
-alias rm='sudo rm -R'
-
+alias rm='sudo rm -R' # be careful with the this command!
 alias nc='ncal -M -3'
 alias y='yes'
-
 alias fss='sudo lsblk --output MODEL,TYPE,NAME,SIZE,MOUNTPOINT,FSTYPE'
 alias rec='arecord -vv -fdat'
 alias ff='ffmpeg -hide_banner -i'
@@ -261,7 +253,7 @@ alias cw='viddy -n 1 -d "echo 'Temp'; sensors 2> /dev/null | grep Core; echo '';
 alias cw2='watch -n 1 -d "echo 'Temp'; sensors 2> /dev/null | grep Core; echo ''; echo 'Freq'; cat /proc/cpuinfo | grep \"^[c]pu MHz\""'
 alias vm='virt-manager &; disown;exit'
 alias r='ranger ./'
-alias homeserv="curl ipinfo.io/ip; echo ''; hostname -I | cut -d' ' -f1; echo ''; python3 -m http.server 8095" # homeserv
+alias homeserv="curl ipinfo.io/ip; echo ''; hostname -I | cut -d' ' -f1; echo ''; python3 -m http.server 8095"
 
 
 
@@ -277,8 +269,7 @@ function rpi {
     fi
 }
 
-# Remove package
-# rpr function | Be careful with this function!
+# Remove package | Be careful with this function!
 function rpr() {
     sudo dnf remove $1
 }
@@ -350,9 +341,10 @@ function rpw {
 }
 
 # Show package dependencies 
-function rpdn {
+function rpdn() {
     local pkg=$1
-    local description=$(dnf info $pkg 2>/dev/null | awk -F': ' '/^Summary/ {print $2}')
+    local pkg_info=$(dnf info $pkg 2>/dev/null)
+    local description=$(echo "$pkg_info" | awk -F': ' '/^Summary/ {print $2}')
     printf "\033[1m%-19s # %s\033[0m\n" "$pkg" "$description"
 
     local deps=$(dnf repoquery --requires --resolve "$pkg" 2>/dev/null | sort -u | grep -v "^$pkg-")
@@ -362,9 +354,11 @@ function rpdn {
         deps=$(ldd $(which $pkg 2>/dev/null) 2>/dev/null | awk '{print $1}' | sort -u)
     fi
 
+    local all_deps_info=$(dnf info $(echo "$deps" | sed 's/ [<>=].*//g') 2>/dev/null)
+
     echo "$deps" | while read -r dep; do
         local clean_dep=${dep%% [<>=]*}
-        local desc=$(dnf info "$clean_dep" 2>/dev/null | awk -F': ' '/^Summary/ {print $2; exit}')
+        local desc=$(echo "$all_deps_info" | awk -v pkg="$clean_dep" '$0 ~ "^Name *: " pkg {f=1; next} f&&/^Summary *: /{print substr($0, index($0, ":") + 2); exit}')
         printf "  %-17s %s\n" "$clean_dep" "${desc:+# $desc}"
     done
 
@@ -482,6 +476,11 @@ function wh() {
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # => Autocompletion functions
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+_t() { 
+  _files -g '*/'
+} 
+compdef _t t
+
 _wh() {
     local -a completions
     completions+=(${(k)aliases})
@@ -493,31 +492,30 @@ _wh() {
 compdef _wh wh
 
 
-_rpdn() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
+_rpdn() {
+    local -a completions
+
+    completions+=(${(k)commands})
+    compadd -a completions
+}
 compdef _rpdn rpdn
 
-_rpdr() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
+_rpdr() {
+    local -a completions
+
+    completions+=(${(k)commands})
+    compadd -a completions
+}
 compdef _rpdr rpdr
 
-_rpdrall() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
-compdef _rpdrall rpdrall
+_rpl() {
+    local -a completions
 
-
-_rpl() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
+    completions+=(${(k)commands})
+    compadd -a completions
+}
 compdef _rpl rpl
 
-#_rpi() { 
-#   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-#} 
-#compdef _rpi rpi
 
 _rpr() {
     local -a completions
@@ -527,19 +525,20 @@ _rpr() {
 }
 compdef _rpr rpr
 
-_cht() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
+_cht() {
+    local -a completions
+
+    completions+=(${(k)commands})
+    compadd -a completions
+}
 compdef _cht cht
 
-_t() { 
-  _files -g '*/'
-} 
-compdef _t t
+_rpinfo() {
+    local -a completions
 
-_rpinfo() { 
-   compadd $(dpkg -l | awk '{print $2}' | tail -n +6)
-} 
+    completions+=(${(k)commands})
+    compadd -a completions
+}
 compdef _rpinfo rpinfo
 
 
@@ -554,12 +553,7 @@ function mem {
    viddy "echo  'Private  +  Shared    =  RAM used    Program'; sudo ps_mem | tac | head -n -1"
 }
 
-#enhanced_tree() {
-#  \tree --dirsfirst -C -L "${1:-1}" "${@:2}"
-#}
-#alias tree='enhanced_tree'
 alias tree='\tree --dirsfirst -C'
-
 
 function fbig {
     find ./ -xdev -type f -size +$@G | sed -e 's/"/"\\""/g' -e 's/.*/"&"/' |
@@ -613,17 +607,12 @@ function rpfb() {
   fi
 }
 
-
 function mir {
   img2pdf * --output slideshow.pdf && evince slideshow.pdf && rm ./slideshow.pdf
 }
 
 function ca {
   \cat *.mp3  | ffmpeg  -i pipe: -c:a copy -c:v copy $1 && mv $1 .. && cd .. && ls
-}
-
-di () {
-   echo "\033[1m`file ./$1`\033[0m" && udevadm info -a --name ./$1 | sed '/""/d' | sed -E -e '/Udevadm|walks|found|rule|single/d' | sed '/looking/d' | sed '/^$/d' | grep -E 'KERNEL|SUBSYSTEM|SUBSYSTEMS|DRIVERS|interface|vendor|device|idVendor|idProduct|manufacturer|product|name|phys|path|speed|model|firmware'
 }
 
 function cht {
@@ -633,7 +622,6 @@ function cht {
 function gc {
    gcc $1 && ./a.out
 }
-
 
 function na {
     filename=$1;
@@ -645,26 +633,28 @@ function di() {
     diff -Nurs "$1" "$2" | diff-so-fancy
 }
 
-# Set window title for terminal emulators
+
+
+#""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# => SET WINDOW TITLE FOR TERMINAL EMULATORS
+#""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # Usage: add to .zshrc and ensure zsh hooks are loaded
 set_win_title() {
-    case "$TERM" in
-        foot*|xterm*|rxvt*|alacritty*)
-            if [[ "$1" =~ ^vim.* ]]; then 
-                # Special handling for vim: show edited file name 
-                print -Pn "\e]0;vim: ${1#vim }\a" 
-            elif [[ -n "$1" ]]; then 
-                # For other commands: show the full command with arguments
-                print -Pn "\e]0;$1\a"
-            else 
-                # Default: show current directory
-                print -Pn "\e]0;%~\a"
-            fi   
-            ;;   
-    esac 
+    # Check if terminal supports setting window title
+    if [[ -n "$TERM_PROGRAM" ]] || [[ "$TERM" =~ ^(xterm|rxvt|foot|alacritty|gnome|konsole|iTerm|mintty|terminator|termite|kitty) ]]; then
+        if [[ "$1" =~ ^vim.* ]]; then
+            print -Pn "\e]0;vim: ${1#vim }\a"  # Show edited file name for vim
+        elif [[ -n "$1" ]]; then
+            print -Pn "\e]0;$1\a"  # Show full command with arguments
+        else
+            print -Pn "\e]0;%~\a"  # Show current directory by default
+        fi
+    fi
 }
+
 # Set window title to current directory before each prompt
 set_win_title_precmd() { print -Pn "\e]0;%~\a" }
+
 # Load zsh hooks
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec set_win_title
@@ -769,7 +759,7 @@ bindkey -v
 function zle-line-init zle-keymap-select {
    case ${KEYMAP} in
        vicmd)
-           PROMPT='%B%F{black}edit: %f%b'
+           PROMPT='%B%F{black}✎ %f%b'
            ;;
        main|viins)
            PROMPT='%B%F{green}❯ %f%b'
@@ -825,7 +815,6 @@ zle -N kill-word
 #bindkey -M vicmd 'j' vi-put-after
 
 # Disable all keys in insert mode except Ctrl+F
-#bindkey -rM viins
 bindkey -M viins '^F' vi-cmd-mode
 
 # Restrict input in normal mode
@@ -833,6 +822,45 @@ bindkey -M vicmd -r 'a-zA-Z0-9'
 
 # Set a short timeout for key sequences
 export KEYTIMEOUT=1
+
+
+
+#""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# => PLUGINS
+#""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+# Load zsh-syntax-highlighting; should be last.
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+ZSH_HIGHLIGHT_STYLES[command]='fg=green,bold'        # Commands in green and bold
+ZSH_HIGHLIGHT_STYLES[alias]='fg=green,bold'          # Aliases in green and bold
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=green,bold'        # Built-in commands in green and bold
+ZSH_HIGHLIGHT_STYLES[function]='fg=green,bold'       # Functions in green and bold
+ZSH_HIGHLIGHT_STYLES[command-substitution]='fg=green,bold'  # Command substitutions in green and bold
+ZSH_HIGHLIGHT_STYLES[precommand]='fg=green,bold'     # Precommands (like 'sudo') in green and bold
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=blue' # Single-hyphen options in blue
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=blue' # Double-hyphen options in blue
+ZSH_HIGHLIGHT_STYLES[arg0]='fg=gray'                 # First argument in gray
+ZSH_HIGHLIGHT_STYLES[arg1]='fg=gray'                 # Second argument in gray
+ZSH_HIGHLIGHT_STYLES[path]='fg=black'                # Paths in black (default terminal color)
+
+# Reset colors for various elements
+ZSH_HIGHLIGHT_STYLES[default]='none'                 # Default style (for unmatched elements)
+ZSH_HIGHLIGHT_STYLES[unknown-token]='none'           # Unknown tokens (including incorrect commands)
+ZSH_HIGHLIGHT_STYLES[reserved-word]='none'           # Reserved words
+ZSH_HIGHLIGHT_STYLES[globbing]='none'                # Globbing expressions
+ZSH_HIGHLIGHT_STYLES[history-expansion]='none'       # History expansions
+ZSH_HIGHLIGHT_STYLES[comment]='none'                 # Comments
+ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]='none'  # Dollar-quoted arguments
+ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]='none'    # Backtick-quoted arguments
+ZSH_HIGHLIGHT_STYLES[assign]='none'                  # Variable assignments
+
+# Disable underlining for paths
+ZSH_HIGHLIGHT_STYLES[path_prefix]='none'
+ZSH_HIGHLIGHT_STYLES[path_approx]='none'
+
+# Reset colors for quoted strings
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='none'  # Strings in double quotes
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='none'  # Strings in single quotes
+ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='none'  # Strings in $'...' quotes
 
 
 
