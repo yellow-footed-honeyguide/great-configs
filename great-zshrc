@@ -45,7 +45,7 @@
 #==============================================================================
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-# => Common Settings
+# => COMMON SETTINGS
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 autoload -U colors && colors
 #PS1='%B%F{red}❯ %f%b' # for root
@@ -163,7 +163,7 @@ stty -ixon # disable Ctrl-S/Q flow control, freeing them for other uses
 
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-# => Moving and Basic System Commands
+# => BASIC SYSTEM COMMANDS
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # ls and facad
 function enhanced_ls() {
@@ -207,7 +207,7 @@ function sus {
 
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-# => Basic Aliases
+# => BASIC ALIASES
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 alias to='\cd /mnt/hddtb; ls'
 alias to1='\cd ~/Desktop/Labour && ls'
@@ -268,7 +268,7 @@ alias homeserv="curl ipinfo.io/ip; echo ''; hostname -I | cut -d' ' -f1; echo ''
 
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-# => Large functions
+# => LARGE FUNCTIONS
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # Install package
 function rpi {
@@ -484,13 +484,8 @@ function wh() {
 
 
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-# => Autocompletion functions
+# => AUTOCOMPLETION FUNCTIONS
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-_t() { 
-  _files -g '*/'
-} 
-compdef _t t
-
 _wh() {
     local -a completions
     completions+=(${(k)aliases})
