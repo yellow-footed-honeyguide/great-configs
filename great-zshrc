@@ -78,34 +78,44 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # => CUSTOM HISTORY
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-HISTFILE=~/.histfile
-HISTSIZE=10000
-SAVEHIST=10000
+HISTFILE=~/.histfile                 # Location of the history file
+HISTSIZE=10000                       # Maximum events in internal history
+SAVEHIST=10000                       # Maximum events in history file
+setopt HIST_IGNORE_ALL_DUPS          # Remove older duplicate commands
+setopt INC_APPEND_HISTORY            # Add commands to history immediately
+setopt EXTENDED_HISTORY              # Save timestamp and duration
+setopt HIST_EXPIRE_DUPS_FIRST        # Remove duplicates first when trimming
+setopt HIST_FIND_NO_DUPS             # Don't display duplicates when searching
+setopt HIST_IGNORE_SPACE             # Ignore commands starting with space
+setopt SHARE_HISTORY                 # Share history between sessions
+HISTORY_IGNORE='(vh|s|e|vz|n|d)'     # Ignore specific short commands
 
-setopt HIST_IGNORE_ALL_DUPS 
-setopt INC_APPEND_HISTORY  
-setopt EXTENDED_HISTORY   
-setopt HIST_EXPIRE_DUPS_FIRST
-setopt HIST_FIND_NO_DUPS    
-setopt HIST_IGNORE_SPACE   
-setopt SHARE_HISTORY      
-HISTORY_IGNORE='(vh|s|e|vz|n|d)' 
-
-# Custom history file
+# Create and open custom history file
 function vh {
+    # Create a temporary file for initial processing
     temp_file=$(mktemp /tmp/histfile.XXXXXX)
+    # Create a temporary file for viewing
     temp_view_file=$(mktemp /tmp/histfile_view.XXXXXX)
-
+    
+    # Process the history file using awk
     awk -F':' '
+    # If line already starts with date-time format, print as is and move to next line
     /^[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}/ { print; next }
     {
+        # Extract command from third field
         cmd=$3
+        # Remove leading "0;" if present
         sub(/^0;/, "", cmd)
+        # Format timestamp to human-readable date
         date=strftime("%y-%m-%d %H:%M", $2)
+        # Print formatted date and command
         print date "| " cmd
     }' ~/.histfile > "$temp_file" && mv "$temp_file" "$temp_view_file"
-
+    
+    # Open processed history in vim for viewing
     vim "$temp_view_file"
+    
+    # Clean up temporary file after viewing
     rm "$temp_view_file"
 }
 
@@ -167,7 +177,7 @@ alias ls='enhanced_ls'
 
 alias l='\ls | nl'
 alias m='mkdir -p'
-alias cal='ncal'
+#alias cal='ncal'
 alias j='\cd ../; facad;'
 alias jj='\cd -; ls;'
 
@@ -491,7 +501,6 @@ _wh() {
 }
 compdef _wh wh
 
-
 _rpdn() {
     local -a completions
 
@@ -515,7 +524,6 @@ _rpl() {
     compadd -a completions
 }
 compdef _rpl rpl
-
 
 _rpr() {
     local -a completions
@@ -546,8 +554,7 @@ compdef _rpinfo rpinfo
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # => SMALL FUNCTIONS
 #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-# https://github.com/yellow-footed-honeyguide/unpak
-alias un='unpak'
+alias un='unpak' # https://github.com/yellow-footed-honeyguide/unpak
 
 function mem {
    viddy "echo  'Private  +  Shared    =  RAM used    Program'; sudo ps_mem | tac | head -n -1"
@@ -566,6 +573,10 @@ function flate {
   xargs stat -c "%y %n" | sort -n
 }
 
+# Description: Removes all files in the current directory except the specified one
+# Usage: rmbut <file_to_keep>
+# Warning: Use with caution. This function deletes files!
+# Note: Creates a temporary directory ../.rmbut for the operation
 function rmbut {
      mkdir ../.rmbut &&
      mv $1 ../.rmbut &&
@@ -580,31 +591,6 @@ function gre {
 
 function loc {
     fd "$1" . 2>&1 | grep -v "Permission denied" | nl
-}
-
-function rpfb() {
-  if [[ -z "$1" ]]; then
-    echo "Use argument"
-    return 1
-  fi
-
-  # Shared Libraries
-  echo "\033[1mShared Libraries:\033[0m"
-  if ! fd --type f --regex "$1(-\\d+\\.\\d+)?\\.so(\\.\[0-9\]+)?" /usr/lib /lib 2> /dev/null | grep -q .; then
-    echo "Nothing found"
-  else
-    fd --type f --regex "$1(-\\d+\\.\\d+)?\\.so(\\.\[0-9\]+)?" /usr/lib /lib 2> /dev/null
-  fi
-
-  echo ""
-
-  # Executables
-  echo "\033[1mExecutables:\033[0m"
-  if ! fd --type executable --glob "*$1*" -E /snap -E /var -E /usr/lib -E /usr/lib32 -E "*lib*" / 2>/dev/null | nl | grep -q .; then
-    echo "Nothing found"
-  else
-    fd --type executable --glob "*$1*" -E /snap -E /var -E /usr/lib -E /usr/lib32 -E "*lib*" / 2>/dev/null | nl
-  fi
 }
 
 function mir {
@@ -631,6 +617,46 @@ function na {
 
 function di() {
     diff -Nurs "$1" "$2" | diff-so-fancy
+}
+
+# Function: trim
+# Description: Trims a video file using ffmpeg
+# Usage: trim <input_file> <trim_start> <trim_end>
+# Arguments:
+#   <input_file>: Path to the input video file
+#   <trim_start>: Cut first n seconds from video
+#   <trim_end>: Cut last n seconds from video
+# Example: trim input.mp4 3 5
+# As Resulf: inpur_trim.mp4 without first 3 sec and last 5 sec
+# Note: Requires ffmpeg and ffprobe to be installed
+trim() {
+    if [[ $# -ne 3 ]]; then
+        echo "Usage: video_trim <input_file> <trim_start> <trim_end>"
+        return 1
+    fi
+
+    local input_file="$1"
+    local trim_start="$2"
+    local trim_end="$3"
+    local output_file="${input_file%.*}_trimmed.${input_file##*.}"
+
+    if [[ ! -f "$input_file" ]]; then
+        echo "Error: Input file does not exist."
+        return 1
+    fi
+
+    local duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$input_file")
+    local end_time=$(echo "$duration - $trim_end" | bc)
+
+    ffmpeg -i "$input_file" -ss "$trim_start" -to "$end_time" -c copy -threads 0 "$output_file"
+
+
+    if [[ $? -eq 0 ]]; then
+        echo "Video trimmed successfully. Output file: $output_file"
+    else
+        echo "Error occurred while trimming the video."
+        return 1
+    fi
 }
 
 
