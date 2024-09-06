@@ -68,8 +68,19 @@
     ap = "!f() { git add . && git commit -m \"$1\" && git push origin main; }; f"
 
     # Compact and colorful log output
+    # %C(yellow)   Yellow color.
+    # %h           Abbreviated commit hash. Like "abc123".
+    # %C(reset)    Resets color. So not everything is yellow.
+    # %s           Outputs the commit subject. Brief description of what was done.
+    # %C(magenta)  Purple color.
+    # %cr          Outputs the relative commit date. Like "2 days ago" or "5 minutes ago".
+    # %C(reset)    Resets color again. Not everything should be purple.
+    # %C(auto)     Automatically colors references to branches and tags. Git figures it out.
+    # %d           Shows references (branches or tags) pointing to the commit. "(HEAD -> master, origin/master)".
+    # %C(reset)    Resets color one more time.
     l = log --graph --format='format:%C(yellow)%h%C(reset) %s %C(magenta)%cr%C(reset)%C(auto)%d%C(reset)'
-		
+
+
     # Add changes to files in the latest commit
     fam = "!f() { git commit -a --amend --no-edit && git push -f origin main ; }; f"
 
