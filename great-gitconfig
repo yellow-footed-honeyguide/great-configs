@@ -22,8 +22,8 @@
 
 # User Information
 [user]
-    email = "s.venetsky@gmail.com"
-    name = "Sergey Veneckiy"
+    email = ""
+    name = ""
 
 # URL Rewrite for "your company" Git
 [url ""]
@@ -69,6 +69,9 @@
 
     # Compact and colorful log output
     l = log --graph --format='format:%C(yellow)%h%C(reset) %s %C(magenta)%cr%C(reset)%C(auto)%d%C(reset)'
+		
+    # Add changes to files in the latest commit
+    fam = "!f() { git commit -a --amend --no-edit && git push -f origin main ; }; f"
 
 
 [alias]
